@@ -11,9 +11,10 @@
 #      enabled_sources.cmake.
 # =============================================================================
 
-set(TOYBOX_DEFAULT_REV "5d9341bb99993fb4c8f6ee8fa34eb0db4760f605")
+set(TOYBOX_DEFAULT_REV "0.8.15")
 set(TOYBOX_DEFAULT_REPOS
     "https://github.com/landley/toybox.git"
+    "https://codeberg.org/landley/toybox.git"
 )
 
 string(ASCII 92 _TB_BS)

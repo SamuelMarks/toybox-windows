@@ -12,7 +12,7 @@
 #   TOYBOX_SOURCE_DIR - Path to upstream Toybox source tree (auto-detected at
 #                       ../toybox or ./toybox, or shallow-fetched via Git).
 #   TOYBOX_GIT_TAG    - Git revision/tag to fetch if TOYBOX_SOURCE_DIR is not
-#                       present locally (default: 5d9341bb99993fb4c8f6ee8fa34eb0db4760f605).
+#                       present locally (default: 0.8.15).
 #   BUILD_TESTING     - Enable CTest functional verification suite (default: ON).
 # =============================================================================
 
