@@ -81,6 +81,7 @@ def test_run_functional_suite_and_cli(
         *,
         stdin_data: bytes | None = None,
         cwd: Path | None = None,
+        emulator: Sequence[str] = (),
     ) -> subprocess.CompletedProcess[bytes]:
         """Simulate Toybox applet responses for ``run_functional_suite``.
 
@@ -89,11 +90,12 @@ def test_run_functional_suite_and_cli(
             args: Applet arguments.
             stdin_data: Optional stdin bytes.
             cwd: Optional working directory.
+            emulator: Optional emulator command sequence.
 
         Returns:
             Simulated ``subprocess.CompletedProcess[bytes]``.
         """
-        _ = (stdin_data, cwd)
+        _ = (stdin_data, cwd, emulator)
         cmd = args[0]
         outputs: dict[str, bytes] = {
             "sort": NL_B.join([b"apple", b"apple", b"banana", b"cherry", b""]),
@@ -158,11 +160,13 @@ def test_run_functional_suite_and_cli(
     monkeypatch.setattr("scripts.run_toybox_tests.run_applet", simulated_applet)
     run_functional_suite(fake_bin)
 
-    parsed = parse_args(["--toybox", str(fake_bin)])
+    parsed = parse_args(["--toybox", str(fake_bin), "--emulator", "wine"])
     assert parsed.toybox == fake_bin
+    assert parsed.emulator == "wine"
 
-    # CLI success
+    # CLI success (with and without --emulator)
     assert main(["--toybox", str(fake_bin)]) == 0
+    assert main(["--toybox", str(fake_bin), "--emulator", "wine"]) == 0
 
     # CLI missing binary
     missing_bin = tmp_path / "missing_toybox"
@@ -170,12 +174,17 @@ def test_run_functional_suite_and_cli(
     assert "toybox binary not found" in capsys.readouterr().err
 
     # CLI suite failure
-    def raise_fail(_bin: Path) -> None:
+    def raise_fail(_bin: Path, *, emulator: Sequence[str] = ()) -> None:
         """Raise an AssertionError to test CLI error reporting.
+
+        Args:
+            _bin: Ignored binary path.
+            emulator: Optional emulator command sequence.
 
         Raises:
             AssertionError: Always raised.
         """
+        _ = emulator
         raise AssertionError("suite assertion failed")
 
     monkeypatch.setattr("scripts.run_toybox_tests.run_functional_suite", raise_fail)

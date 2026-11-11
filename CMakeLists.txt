@@ -40,6 +40,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 # -----------------------------------------------------------------------------
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
 set(AUTO_WIN_MSVC_BUILD_TESTS OFF CACHE BOOL "Disable auto-win-msvc internal tests" FORCE)
+set(AUTO_WIN_MSVC_BUILD_TESTING OFF CACHE BOOL "Disable auto-win-msvc internal test targets" FORCE)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "DOS" OR WATCOM OR CMAKE_C_COMPILER_ID MATCHES "Watcom")
     set(TOYBOX_TARGET_DOS TRUE)
@@ -67,7 +68,7 @@ if(WIN32 OR MSVC OR MINGW OR TOYBOX_TARGET_DOS OR NOT DEFINED AUTO_WIN_MSVC_DIR)
     FetchContent_Declare(
         auto_win_msvc
         GIT_REPOSITORY https://github.com/SamuelMarks/auto-win-msvc.git
-        GIT_TAG        main
+        GIT_TAG        master
     )
     FetchContent_MakeAvailable(auto_win_msvc)
     set(BUILD_TESTING "${_saved_build_testing}" CACHE BOOL "" FORCE)
@@ -106,7 +107,6 @@ set(TOYBOX_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/toybox_generated")
 set(_gen_args
     TOYBOX_DIR "${TOYBOX_SOURCE_DIR}"
     OUT_DIR "${TOYBOX_GENERATED_DIR}"
-    PYTHON_EXECUTABLE "${Python3_EXECUTABLE}"
     OUT_SOURCES_VAR TOYBOX_RAW_SOURCES
 )
 if(TOYBOX_TARGET_DOS)
@@ -290,9 +290,15 @@ if(BUILD_TESTING)
     add_test(NAME toybox_awk COMMAND toybox awk "BEGIN { print 21 * 2 }")
     set_tests_properties(toybox_awk PROPERTIES PASS_REGULAR_EXPRESSION "^42")
 
+    set(_pipeline_cmd
+        "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_toybox_tests.py"
+        --toybox "$<TARGET_FILE:toybox>"
+    )
+    if(CMAKE_CROSSCOMPILING_EMULATOR)
+        list(APPEND _pipeline_cmd --emulator "${CMAKE_CROSSCOMPILING_EMULATOR}")
+    endif()
     add_test(
         NAME toybox_pipeline_suite
-        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/run_toybox_tests.py"
-                --toybox "$<TARGET_FILE:toybox>"
+        COMMAND ${_pipeline_cmd}
     )
 endif()
